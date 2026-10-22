@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HTML-Öffner">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>HTML-Öffner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: eine ruhige Werkzeugspalte – oben der große Öffnen-Bereich, darunter "Zuletzt geöffnet", unten die Anleitung. Der Viewer legt sich bildschirmfüllend darüber. */
+:root{
+  --bg:#f4f6ef; --surface:#ffffff; --sunk:#eaeee2; --fg:#1d2414; --muted:#5a6450; --line:#d8dfca;
+  --accent:#B6D16A; --accent-ink:#4a6410; --on-accent:#1c2806; --danger:#a8321f;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible Next", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --f-mono:"Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12160e; --surface:#1b2015; --sunk:#161a11; --fg:#e8eddd; --muted:#a0aa91; --line:#2e3624;
+  --accent:#B6D16A; --accent-ink:#c6df7c; --on-accent:#1c2806; --danger:#f08a74; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#12160e; --surface:#1b2015; --sunk:#161a11; --fg:#e8eddd; --muted:#a0aa91; --line:#2e3624;
+  --accent:#B6D16A; --accent-ink:#c6df7c; --on-accent:#1c2806; --danger:#f08a74; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:1rem;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:28px 48px}
+body.viewing{overflow:hidden}
+.wrap{max-width:40rem;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header{display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px}
+.tag{font-family:var(--f-mono);font-size:.95rem;font-weight:500;background:var(--accent);color:var(--on-accent);padding:2px 8px;border-radius:6px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(2rem,7vw,2.6rem);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.lead{margin:0;color:var(--muted);max-width:34rem}
+h2{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0}
+.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:16px}
+.tabs{display:flex;gap:4px;background:var(--sunk);padding:4px;border-radius:10px;align-self:flex-start}
+.tabs button{font:inherit;font-weight:600;font-size:.9rem;border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+
+.drop{border:2px dashed var(--line);border-radius:12px;padding:28px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:color-mix(in srgb, var(--accent) 12%, transparent)}
+.drop p{margin:0;color:var(--muted);font-size:.9rem}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:13px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:1.05rem}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-ghost{background:transparent;color:var(--accent-ink);border:1px solid var(--line);font-size:.92rem;padding:9px 14px;font-weight:600}
+.btn:focus-visible,.tabs button:focus-visible,.row:focus-visible,.icon-btn:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+textarea{width:100%;min-height:9rem;font-family:var(--f-mono);font-size:.85rem;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--sunk);color:var(--fg);resize:vertical}
+.paste-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.msg{margin:0;font-size:.9rem;color:var(--danger)}
+.demo-line{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:.9rem;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+
+.recent-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.recent-head span{font-size:.85rem;color:var(--muted)}
+.list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.item{display:flex;align-items:center;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.row{flex:1;min-width:0;font:inherit;color:inherit;text-align:left;background:transparent;border:0;padding:13px 16px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.row:hover{background:var(--sunk)}
+.fname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.icon-btn{font:inherit;background:transparent;border:0;color:var(--muted);padding:12px 16px;cursor:pointer;font-size:.85rem}
+.icon-btn:hover{color:var(--danger)}
+.empty{padding:18px 16px;color:var(--muted);font-size:.92rem;margin:0}
+
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:2rem 1fr;gap:10px;align-items:start}
+.steps li::before{counter-increment:s;content:counter(s);font-family:var(--f-mono);font-weight:500;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;background:var(--sunk);border:1px solid var(--line);font-size:.9rem}
+.steps strong{font-weight:700}
+.note{font-size:.88rem;color:var(--muted);margin:0;border-left:3px solid var(--line);padding-left:12px}
+.note ul{margin:6px 0 0;padding-left:18px}
+
+/* Viewer */
+.viewer{position:fixed;inset:0;z-index:50;background:var(--surface);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.bar{display:flex;align-items:center;gap:8px;padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px;
+  padding-left:max(12px, env(safe-area-inset-left, 0px));padding-right:max(12px, env(safe-area-inset-right, 0px));border-bottom:1px solid var(--line);background:var(--surface)}
+.bar .title{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.95rem}
+.bar button{font:inherit;font-size:.88rem;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:7px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.bar button.close{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.bar button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.bar svg{width:16px;height:16px;flex:none}
+@media (max-width:520px){.bar .lbl{display:none}}
+#frame{flex:1;width:100%;border:0;background:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="tag">.html</span><span class="eyebrow">Für iPad &amp; iPhone</span></div>
+    <h1>HTML-Öffner</h1>
+    <p class="lead">Öffnet HTML-Lernapps direkt aus der Dateien-App, mit funktionierendem JavaScript. Kein Hochladen ins Netz, keine zusätzliche App.</p>
+  </header>
+
+  <section class="panel" aria-label="HTML öffnen">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-file" aria-selected="true" aria-controls="pane-file">Datei</button>
+      <button role="tab" id="tab-paste" aria-selected="false" aria-controls="pane-paste">Code einfügen</button>
+    </div>
+
+    <div id="pane-file" role="tabpanel" aria-labelledby="tab-file">
+      <div class="drop" id="drop">
+        <label class="btn btn-primary" for="file">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          HTML-Datei auswählen
+        </label>
+        <input class="sr" type="file" id="file" accept="text/html,.html,.htm">
+        <p>Wählt die Datei in „Dateien“, OneDrive oder ByCS Drive aus.<br>Am Laptop: Datei einfach hierher ziehen.</p>
+      </div>
+    </div>
+
+    <div id="pane-paste" role="tabpanel" aria-labelledby="tab-paste" hidden>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label for="code" style="font-size:.9rem;color:var(--muted)">HTML-Code aus Claude, ChatGPT oder einer Mail hier einfügen:</label>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="<!DOCTYPE html>&#10;<html> …"></textarea>
+        <div class="paste-actions">
+          <button class="btn btn-primary" id="run-code" type="button">Code ausführen</button>
+          <button class="btn btn-ghost" id="clear-code" type="button">Leeren</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="msg" id="msg" hidden></p>
+
+    <div class="demo-line">
+      <span>Zum Ausprobieren:</span>
+      <button class="btn btn-ghost" id="demo" type="button">Beispiel öffnen: Fadenpendel</button>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px" aria-labelledby="recent-h">
+    <div class="recent-head"><h2 id="recent-h">Zuletzt geöffnet</h2><span>bleibt nur auf diesem Gerät</span></div>
+    <div class="list" id="list"><p class="empty">Noch nichts geöffnet. Geöffnete Dateien erscheinen hier und lassen sich mit einem Tipp wieder starten.</p></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px" aria-labelledby="how-h">
+    <h2 id="how-h">Einmal einrichten</h2>
+    <ol class="steps">
+      <li><span>Diese Seite in <strong>Safari</strong> öffnen.</span></li>
+      <li><span>Auf <strong>Teilen</strong> tippen (Quadrat mit Pfeil) und <strong>„Zum Home-Bildschirm“</strong> wählen.</span></li>
+      <li><span>Ab jetzt: HTML-Öffner antippen, Datei auswählen, fertig.</span></li>
+    </ol>
+    <div class="note">Gut zu wissen:
+      <ul>
+        <li>Am besten funktionieren Apps, die in <em>einer</em> Datei stecken. Bilder oder Skripte aus demselben Ordner werden nicht mitgeladen.</li>
+        <li>Bibliotheken von cdnjs, jsDelivr oder unpkg funktionieren, andere Quellen werden blockiert.</li>
+        <li>Kamera, Mikrofon und Pop-up-Fenster (<code>alert</code>) gehen hier nicht. Solche Apps besser über einen Link teilen.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-labelledby="v-title">
+  <div class="bar">
+    <button class="close" id="v-close" type="button" aria-label="Schließen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="lbl">Schließen</span></button>
+    <span class="title" id="v-title"></span>
+    <button id="v-reload" type="button" aria-label="Neu starten">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg><span class="lbl">Neu starten</span></button>
+    <button id="v-full" type="button" aria-label="Vollbild">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span class="lbl">Vollbild</span></button>
+  </div>
+  <iframe id="frame" title="Geöffnete HTML-Datei" allow="fullscreen" allowfullscreen></iframe>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const viewer=$('viewer'), frame=$('frame'), msg=$('msg');
+  let current=null;
+
+  /* ---------- Speicher (IndexedDB, nur dieses Gerät) ---------- */
+  const MAX=10;
+  function db(){
+    return new Promise((res,rej)=>{
+      try{
+        const r=indexedDB.open('html-oeffner',1);
+        r.onupgradeneeded=()=>r.result.createObjectStore('files',{keyPath:'id'});
+        r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+      }catch(e){rej(e)}
+    });
+  }
+  async function tx(mode,fn){
+    const d=await db();
+    return new Promise((res,rej)=>{
+      const t=d.transaction('files',mode), s=t.objectStore('files');
+      const out=fn(s); t.oncomplete=()=>res(out&&out.result!==undefined?out.result:out); t.onerror=()=>rej(t.error);
+    });
+  }
+  async function listRecent(){
+    try{ const all=await tx('readonly',s=>s.getAll()); return (all||[]).sort((a,b)=>b.date-a.date); }catch(e){ return null; }
+  }
+  async function saveRecent(entry){
+    try{
+      const all=await listRecent()||[];
+      const same=all.find(f=>f.name===entry.name);
+      if(same) entry.id=same.id;
+      await tx('readwrite',s=>s.put(entry));
+      const rest=(await listRecent()||[]).slice(MAX);
+      for(const f of rest) await tx('readwrite',s=>s.delete(f.id));
+    }catch(e){}
+    renderList();
+  }
+  async function removeRecent(id){ try{ await tx('readwrite',s=>s.delete(id)); }catch(e){} renderList(); }
+
+  function fmtSize(b){ return b<1024? b+' B' : b<1048576? (b/1024).toFixed(0)+' KB' : (b/1048576).toFixed(1).replace('.',',')+' MB'; }
+  function fmtDate(t){
+    try{ return new Date(t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; }
+  }
+
+  async function renderList(){
+    const list=$('list'); const all=await listRecent();
+    list.innerHTML='';
+    if(all===null){ list.innerHTML='<p class="empty">Dieser Browser erlaubt hier keinen Speicher. Öffnen funktioniert trotzdem, nur ohne Verlauf.</p>'; return; }
+    if(!all.length){ list.innerHTML='<p class="empty">Noch nichts geöffnet. Geöffnete Dateien erscheinen hier und lassen sich mit einem Tipp wieder starten.</p>'; return; }
+    for(const f of all){
+      const item=document.createElement('div'); item.className='item';
+      const row=document.createElement('button'); row.type='button'; row.className='row';
+      const n=document.createElement('span'); n.className='fname'; n.textContent=f.name;
+      const m=document.createElement('span'); m.className='meta'; m.textContent=fmtSize(f.size)+' · '+fmtDate(f.date);
+      row.append(n,m); row.addEventListener('click',()=>openHtml(f.name,f.html,false));
+      const del=document.createElement('button'); del.type='button'; del.className='icon-btn'; del.textContent='Entfernen';
+      del.setAttribute('aria-label',f.name+' aus der Liste entfernen');
+      del.addEventListener('click',()=>removeRecent(f.id));
+      item.append(row,del); list.append(item);
+    }
+  }
+
+  /* ---------- Öffnen ---------- */
+  function showMsg(t){ msg.textContent=t; msg.hidden=!t; }
+  function looksLikeHtml(s){ return /<\s*(!doctype|html|head|body|div|script|style|canvas|svg|p|h1|main|section)\b/i.test(s); }
+
+  function openHtml(name,html,remember){
+    showMsg('');
+    current={name,html};
+    $('v-title').textContent=name;
+    viewer.hidden=false; document.body.classList.add('viewing');
+    frame.srcdoc=html;
+    if(remember) saveRecent({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),name,size:new Blob([html]).size,date:Date.now(),html});
+    setTimeout(()=>$('v-close').focus(),50);
+  }
+  function closeViewer(){
+    viewer.hidden=true; document.body.classList.remove('viewing');
+    frame.removeAttribute('srcdoc'); frame.src='about:blank'; current=null;
+  }
+
+  function readFile(file){
+    if(!file) return;
+    if(!/\.(html?|xhtml)$/i.test(file.name) && file.type!=='text/html'){
+      showMsg('„'+file.name+'“ ist keine HTML-Datei. Bitte eine Datei mit der Endung .html wählen.'); return;
+    }
+    const r=new FileReader();
+    r.onload=()=>{
+      const txt=String(r.result||'');
+      if(!txt.trim()){ showMsg('Die Datei ist leer.'); return; }
+      openHtml(file.name,txt,true);
+    };
+    r.onerror=()=>showMsg('Die Datei konnte nicht gelesen werden. Liegt sie nur in der Cloud? Dann erst in der Dateien-App herunterladen (Wolken-Symbol) und erneut wählen.');
+    r.readAsText(file,'utf-8');
+  }
+
+  $('file').addEventListener('change',e=>{ readFile(e.target.files[0]); e.target.value=''; });
+
+  const drop=$('drop');
+  ['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{ if(ev==='dragleave' && e.relatedTarget) return; drop.classList.remove('over'); }));
+  document.addEventListener('drop',e=>{ e.preventDefault(); const f=e.dataTransfer&&e.dataTransfer.files[0]; if(f) readFile(f); });
+
+  $('run-code').addEventListener('click',()=>{
+    const code=$('code').value;
+    if(!code.trim()){ showMsg('Das Feld ist leer. Erst den HTML-Code einfügen.'); return; }
+    if(!looksLikeHtml(code)){ showMsg('Das sieht nicht nach HTML aus. Der Code sollte z. B. mit <!DOCTYPE html> oder <html> beginnen.'); return; }
+    const m=code.match(/<title[^>]*>([^<]{1,80})<\/title>/i);
+    const name=(m? m[1].trim() : 'Eingefügter Code')+' (eingefügt)';
+    openHtml(name,code,true);
+  });
+  $('clear-code').addEventListener('click',()=>{ $('code').value=''; $('code').focus(); showMsg(''); });
+
+  /* Tabs */
+  function selectTab(which){
+    const file=which==='file';
+    $('tab-file').setAttribute('aria-selected',file); $('tab-paste').setAttribute('aria-selected',!file);
+    $('pane-file').hidden=!file; $('pane-paste').hidden=file; showMsg('');
+  }
+  $('tab-file').addEventListener('click',()=>selectTab('file'));
+  $('tab-paste').addEventListener('click',()=>selectTab('paste'));
+
+  /* Viewer-Steuerung */
+  $('v-close').addEventListener('click',closeViewer);
+  $('v-reload').addEventListener('click',()=>{ if(!current) return; frame.srcdoc=''; requestAnimationFrame(()=>{ frame.srcdoc=current.html; }); });
+  $('v-full').addEventListener('click',()=>{
+    const el=viewer, fn=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(document.fullscreenElement||document.webkitFullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return; }
+    try{ const p=fn&&fn.call(el); if(p&&p.catch) p.catch(()=>{}); }catch(e){}
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !viewer.hidden) closeViewer(); });
+
+  /* Beispiel: Fadenpendel */
+  const DEMO = '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fadenpendel</title>'+
+  '<style>body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:20px;background:#fff;color:#1d2414;display:flex;flex-direction:column;align-items:center;gap:14px}'+
+  'h1{font-size:1.4rem;margin:0}canvas{max-width:100%;border:1px solid #d8dfca;border-radius:12px;background:#f8faf3}'+
+  '.ctl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}input{width:200px;accent-color:#7a9a2a}'+
+  '.out{font-variant-numeric:tabular-nums;background:#B6D16A;padding:6px 12px;border-radius:8px;font-weight:600}</style></head><body>'+
+  '<h1>Fadenpendel</h1><canvas id="c" width="360" height="300"></canvas>'+
+  '<div class="ctl"><label for="l">Fadenlänge l = <b id="lv">1,00</b> m</label><input id="l" type="range" min="0.2" max="2" step="0.05" value="1"></div>'+
+  '<div class="out">T = 2π·√(l/g) = <span id="T"></span> s</div>'+
+  '<p style="margin:0;color:#5a6450;font-size:.9rem">Wenn das Pendel schwingt, läuft JavaScript. ✓</p>'+
+  '<script>const c=document.getElementById("c"),x=c.getContext("2d"),s=document.getElementById("l");let L=1,t0=performance.now();const g=9.81,phi0=0.45;'+
+  'function upd(){L=+s.value;document.getElementById("lv").textContent=L.toFixed(2).replace(".",",");document.getElementById("T").textContent=(2*Math.PI*Math.sqrt(L/g)).toFixed(2).replace(".",",");}'+
+  's.oninput=upd;upd();function draw(now){const t=(now-t0)/1000,w=Math.sqrt(g/L),phi=phi0*Math.cos(w*t),r=40+L*110,ox=180,oy=20,bx=ox+r*Math.sin(phi),by=oy+r*Math.cos(phi);'+
+  'x.clearRect(0,0,360,300);x.strokeStyle="#5a6450";x.lineWidth=2;x.beginPath();x.moveTo(120,oy);x.lineTo(240,oy);x.stroke();x.beginPath();x.moveTo(ox,oy);x.lineTo(bx,by);x.stroke();'+
+  'x.fillStyle="#4a6410";x.beginPath();x.arc(bx,by,14,0,7);x.fill();requestAnimationFrame(draw);}requestAnimationFrame(draw);<\/script></body></html>';
+  $('demo').addEventListener('click',()=>openHtml('Beispiel: Fadenpendel',DEMO,false));
+
+  renderList();
+})();
+</script>
+</body>
+</html>
